@@ -1,0 +1,265 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════
+   PREMIUM DARK MODE DESIGN SYSTEM
+   Linear / Vercel / Notion quality
+══════════════════════════════════════ */
+
+@theme {
+  /* Brand Primary — Indigo */
+  --color-brand-50: #EEF2FF;
+  --color-brand-100: #E0E7FF;
+  --color-brand-200: #C7D2FE;
+  --color-brand-300: #A5B4FC;
+  --color-brand-400: #818CF8;
+  --color-brand-500: #6366F1;
+  --color-brand-600: #4F46E5;
+  --color-brand-700: #4338CA;
+  --color-brand-800: #3730A3;
+  --color-brand-900: #312E81;
+
+  /* Purple Accent */
+  --color-violet-500: #8B5CF6;
+  --color-violet-600: #7C3AED;
+
+  /* Success Green */
+  --color-success-400: #4ADE80;
+  --color-success-500: #22C55E;
+
+  /* Warning Amber */
+  --color-warn-400: #FBBF24;
+  --color-warn-500: #F59E0B;
+
+  /* Danger Red */
+  --color-danger-400: #F87171;
+  --color-danger-500: #EF4444;
+
+  /* Info Sky */
+  --color-info-400: #60A5FA;
+  --color-info-500: #38BDF8;
+
+  /* Font */
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  :root {
+    /* Always use dark mode tokens as default */
+    --bg-base:      #0F172A;
+    --bg-surface:   #111827;
+    --bg-card:      #1E293B;
+    --bg-elevated:  #273449;
+    --bg-overlay:   rgba(15, 23, 42, 0.7);
+
+    --text-primary:   #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-muted:     #94A3B8;
+    --text-disabled:  #64748B;
+
+    --border-default: rgba(148, 163, 184, 0.15);
+    --border-focus:   #6366F1;
+    --border-hover:   rgba(148, 163, 184, 0.35);
+
+    --brand:         #6366F1;
+    --brand-hover:   #4F46E5;
+    --brand-active:  #4338CA;
+    --brand-glow:    rgba(99, 102, 241, 0.4);
+    --brand-glow-sm: rgba(99, 102, 241, 0.25);
+
+    --success:       #22C55E;
+    --success-glow:  rgba(34, 197, 94, 0.4);
+    --warn:          #F59E0B;
+    --danger:        #EF4444;
+    --danger-glow:   rgba(239, 68, 68, 0.3);
+    --info:          #38BDF8;
+
+    --scrollbar-thumb: #273449;
+    --scrollbar-hover: #6366F1;
+
+    /* Backwards-compatible aliases */
+    --background: var(--bg-base);
+    --foreground: var(--text-primary);
+    --card: var(--bg-card);
+    --card-foreground: var(--text-primary);
+    --border: var(--border-default);
+  }
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    border-color: var(--border-default);
+  }
+
+  html {
+    /* Force dark */
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease;
+  }
+
+  /* Premium Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 99px;
+    transition: background-color 0.2s;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-hover);
+  }
+}
+
+/* ══════════════════════════════════════
+   COMPONENT UTILITIES
+══════════════════════════════════════ */
+
+/* Premium Glass Card */
+.glass-card {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255,255,255,0.05) inset;
+}
+
+/* Solid Card */
+.surface-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Premium Input */
+.input-premium {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  outline: none;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-premium::placeholder {
+  color: var(--text-disabled);
+}
+.input-premium:hover {
+  border-color: var(--border-hover);
+}
+.input-premium:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+/* Primary Gradient Button */
+.btn-primary {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  font-family: var(--font-sans);
+}
+.btn-primary:hover {
+  transform: scale(1.03) translateY(-1px);
+  box-shadow: 0 12px 28px rgba(99, 102, 241, 0.4);
+}
+.btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+.btn-secondary:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+/* Ghost Button */
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: var(--font-sans);
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+}
+
+/* Brand Glow Focus Ring */
+.focus-brand:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+/* No scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Glow text */
+.glow-text {
+  text-shadow: 0 0 24px rgba(99,102,241,0.6);
+}
+
+/* Brand gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, #818CF8, #C084FC);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Indigo progress bar */
+.progress-bar {
+  background: var(--bg-elevated);
+  border-radius: 99px;
+  overflow: hidden;
+  height: 6px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366F1, #8B5CF6);
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+.progress-bar-fill.success {
+  background: #22C55E;
+}
