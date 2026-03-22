@@ -13,7 +13,7 @@ export const AppFooter = () => {
   return (
     <>
       <footer className="w-full mt-auto shrink-0 border-t border-[rgba(148,163,184,0.12)] bg-[#0F172A]/80 backdrop-blur-md">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
+        <div className="max-w-full mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
            <div className="text-[12px] text-[#94A3B8] font-medium tracking-wide text-center sm:text-left">
             
             <span className="ml-1 sm:ml-2">Built with care, for your better days 💙</span>
