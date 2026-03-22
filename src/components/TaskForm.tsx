@@ -5,6 +5,9 @@ import type { Priority, Category } from '../types';
 import { X, Flag, Tag } from 'lucide-react';
 import { CustomTimePicker } from './CustomTimePicker';
 import { CustomSelect } from './CustomSelect';
+import { SecureInput } from './ui/SecureInput';
+import { SecureTextarea } from './ui/SecureTextarea';
+import { hasImproperContent } from '../utils/sanitize';
 
 interface TaskFormProps {
   isOpen: boolean;
@@ -58,7 +61,7 @@ export const TaskForm = ({ isOpen, onClose, editTaskId }: TaskFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || hasImproperContent(title) || hasImproperContent(description)) return;
     const payload = { title, description, priority: priority as Priority, category: category as Category, startTime, endTime };
     editTaskId ? updateTask(editTaskId, payload) : addTask({ ...payload, subtasks: [] });
     onClose();
@@ -84,7 +87,7 @@ export const TaskForm = ({ isOpen, onClose, editTaskId }: TaskFormProps) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 16 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative w-full max-w-lg overflow-hidden rounded-2xl"
+            className="relative w-full max-w-lg overflow-visible rounded-2xl"
             style={{
               background: 'var(--bg-card)',
               border: '1px solid rgba(148,163,184,0.12)',
@@ -93,7 +96,7 @@ export const TaskForm = ({ isOpen, onClose, editTaskId }: TaskFormProps) => {
           >
             {/* Header with gradient */}
             <div
-              className="px-6 py-5 flex justify-between items-center"
+              className="px-6 py-5 flex justify-between items-center rounded-t-2xl"
               style={{
                 background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
                 boxShadow: '0 8px 24px rgba(99,102,241,0.3)',
@@ -113,10 +116,10 @@ export const TaskForm = ({ isOpen, onClose, editTaskId }: TaskFormProps) => {
             </div>
 
             {/* Body */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5 rounded-b-2xl">
               {/* Title */}
               <div>
-                <input
+                <SecureInput
                   type="text"
                   placeholder="What do you need to accomplish?"
                   value={title}
@@ -130,7 +133,7 @@ export const TaskForm = ({ isOpen, onClose, editTaskId }: TaskFormProps) => {
 
               {/* Description */}
               <div>
-                <textarea
+                <SecureTextarea
                   placeholder="Notes or details... (optional)"
                   value={description}
                   onChange={e => setDescription(e.target.value)}
@@ -172,7 +175,7 @@ export const TaskForm = ({ isOpen, onClose, editTaskId }: TaskFormProps) => {
                 <button type="button" onClick={onClose} className="btn-secondary px-5 py-2.5 text-sm">
                   Cancel
                 </button>
-                <button type="submit" disabled={!title.trim()} className="btn-primary px-6 py-2.5 text-sm">
+                <button type="submit" disabled={!title.trim() || hasImproperContent(title) || hasImproperContent(description)} className="btn-primary px-6 py-2.5 text-sm">
                   {editTaskId ? 'Save Changes' : 'Add Task'}
                 </button>
               </div>

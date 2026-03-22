@@ -83,6 +83,25 @@
     --card-foreground: var(--text-primary);
     --border: var(--border-default);
   }
+
+  html.light {
+    --bg-base:      #F8FAFC;
+    --bg-surface:   #F1F5F9;
+    --bg-card:      #FFFFFF;
+    --bg-elevated:  #E2E8F0;
+    --bg-overlay:   rgba(255, 255, 255, 0.7);
+
+    --text-primary:   #0F172A;
+    --text-secondary: #334155;
+    --text-muted:     #64748B;
+    --text-disabled:  #94A3B8;
+
+    --border-default: rgba(15, 23, 42, 0.1);
+    --border-focus:   #6366F1;
+    --border-hover:   rgba(15, 23, 42, 0.2);
+
+    --scrollbar-thumb: #CBD5E1;
+  }
 }
 
 @layer base {
@@ -92,8 +111,13 @@
   }
 
   html {
-    /* Force dark */
     color-scheme: dark;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  html.light {
+    color-scheme: light;
   }
 
   body {

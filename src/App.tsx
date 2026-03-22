@@ -7,6 +7,7 @@ import { Onboarding } from "./components/Onboarding";
 import { Settings } from "./components/Settings";
 import { useDailyReset } from "./hooks/useDailyReset";
 import { RewardPopup } from "./components/RewardPopup";
+import { UserDelightPopup } from "./components/UserDelightPopup";
 import { useTaskStore } from "./store/useTaskStore";
 import { Settings as SettingsIcon, Plus, Sparkles, BatteryLow, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 /* ── Greetings ─────────────────────────────────────────────── */
 function getGreeting() {
   const h = new Date().getHours();
+  if (h >= 0 && h < 5) return { text: "Go to Sleep", sub: "don't be like this, be gentle on you. go - sleep like this", dot: "#64748B" };
   if (h >= 5 && h < 12) return { text: "Good Morning", sub: "Ready to win the day? ✨", dot: "#22C55E" };
   if (h >= 12 && h < 17) return { text: "Good Afternoon", sub: "Keep the momentum going 🚀", dot: "#6366F1" };
   if (h >= 17 && h < 22) return { text: "Good Evening", sub: "Wrapping up strong 💪", dot: "#F59E0B" };
@@ -550,6 +552,22 @@ function App() {
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
   const [motivateModal, setMotivateModal] = useState<(typeof STORIES)[0] | null>(null);
   const [tiredModal, setTiredModal] = useState<string | null>(null);
+  const [isUserDelightOpen, setIsUserDelightOpen] = useState(false);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const isDarkOS = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const isDark =
+      settings.theme === "dark" || (settings.theme === "system" && isDarkOS);
+
+    if (isDark) {
+      root.classList.add("dark");
+      root.classList.remove("light");
+    } else {
+      root.classList.add("light");
+      root.classList.remove("dark");
+    }
+  }, [settings.theme]);
 
   const greeting = getGreeting();
 
@@ -563,6 +581,10 @@ function App() {
   };
   const handleMotivate = () => setMotivateModal(STORIES[Math.floor(Math.random() * STORIES.length)]);
   const handleTired = () => setTiredModal(TIRED_MESSAGES[Math.floor(Math.random() * TIRED_MESSAGES.length)]);
+
+  const handleNameClick = () => {
+    setIsUserDelightOpen(true);
+  };
 
   if (!settings.isOnboarded) return <Onboarding />;
 
@@ -585,7 +607,14 @@ function App() {
               className="font-bold tracking-tight leading-tight"
               style={{ color: "var(--text-primary)", fontSize: "clamp(1.15rem, 5vw, 2.25rem)" }}
             >
-              {greeting.text}, <span className="text-gradient">{settings.name}</span>
+              {greeting.text},{" "}
+              <button
+                onClick={handleNameClick}
+                className="text-gradient cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
+                title="Tap for a surprise"
+              >
+                {settings.name}
+              </button>
             </h1>
             <p className="text-xs mt-1 font-medium" style={{ color: "var(--text-muted)" }}>
               {greeting.sub}
@@ -737,6 +766,13 @@ function App() {
           accentGradient="linear-gradient(90deg, #F59E0B, #FBBF24)"
         />
       )}
+
+      {/* Premium User Delight Modal */}
+      <UserDelightPopup
+        isOpen={isUserDelightOpen}
+        onClose={() => setIsUserDelightOpen(false)}
+        userName={settings.name}
+      />
     </Layout>
   );
 }

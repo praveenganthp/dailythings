@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FloatingMotivators } from './FloatingMotivators';
+import { AppFooter } from './AppFooter';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,7 +10,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div
-      className="min-h-screen relative overflow-hidden"
+      className="min-h-screen relative overflow-hidden flex flex-col"
       style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)' }}
     >
       {/* Ambient Background */}
@@ -44,6 +45,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </motion.div>
       </main>
+      <div className="relative z-20 mt-auto">
+        <AppFooter />
+      </div>
     </div>
   );
 };

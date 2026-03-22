@@ -73,7 +73,7 @@ const TaskCardContent = ({
       {dragHandleProps && (
         <div
           {...dragHandleProps}
-          className="mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing flex-shrink-0"
+          className="mt-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing flex-shrink-0"
           style={{ color: 'var(--text-disabled)' }}
         >
           <GripVertical size={16} />
@@ -152,7 +152,7 @@ const TaskCardContent = ({
         <button
           onClick={() => setShowOptions(v => !v)}
           title="Options"
-          className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+          className="p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
           style={{ color: 'var(--text-muted)' }}
         >
           <MoreVertical size={16} />

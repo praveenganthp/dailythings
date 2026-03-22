@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import { CheckCircle2, CircleDashed, Zap, AlertTriangle, Target } from 'lucide-react';
+import { CompletionDelightPopup } from './CompletionDelightPopup';
 
 /* ── Compact stat card with glow hover ─────────────────── */
 const StatCard = ({
@@ -62,6 +64,7 @@ const StatCard = ({
 /* ── Dashboard ─────────────────────────────────────────── */
 export const Dashboard = () => {
   const tasks = useTaskStore(state => state.tasks);
+  const [isDelightOpen, setIsDelightOpen] = useState(false);
 
   const total      = tasks.length;
   const completed  = tasks.filter(t => t.completed).length;
@@ -76,6 +79,10 @@ export const Dashboard = () => {
   const offset        = circumference - (pct / 100) * circumference;
   const ringColor     = pct === 100 ? '#22C55E' : '#6366F1';
   const ringGlow      = pct === 100 ? 'rgba(34,197,94,0.6)' : 'rgba(99,102,241,0.5)';
+
+  const handleProgressClick = () => {
+    setIsDelightOpen(true);
+  };
 
   return (
     <div className="space-y-3">
@@ -96,10 +103,14 @@ export const Dashboard = () => {
             <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-disabled)' }}>
               Today's Progress
             </p>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold text-gradient tabular-nums">{pct}%</span>
+            <button
+              onClick={handleProgressClick}
+              className="flex items-baseline gap-1.5 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none group text-left"
+              title="Click for a surprise"
+            >
+              <span className="text-3xl font-bold text-gradient tabular-nums group-hover:scale-105 transition-transform origin-left">{pct}%</span>
               <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>done</span>
-            </div>
+            </button>
             <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-disabled)' }}>
               {completed}/{total} tasks · {score} pts
             </p>
@@ -206,6 +217,12 @@ export const Dashboard = () => {
           {score} pts
         </span>
       </div>
+
+      <CompletionDelightPopup
+        isOpen={isDelightOpen}
+        onClose={() => setIsDelightOpen(false)}
+        percent={pct}
+      />
     </div>
   );
 };

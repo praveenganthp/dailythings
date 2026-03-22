@@ -16,10 +16,15 @@ export const CustomTimePicker = ({ label, value, onChange }: CustomTimePickerPro
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const parts  = value ? value.split(/[: ]/) : ['09', '00', 'AM'];
-  const hour   = parts[0] || '09';
-  const minute = parts[1] || '00';
-  const period = parts[2] || 'AM';
+  const now = new Date();
+  const defaultH = String(now.getHours() % 12 || 12).padStart(2, '0');
+  const defaultM = String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0');
+  const defaultP = now.getHours() >= 12 ? 'PM' : 'AM';
+
+  const parts  = value ? value.split(/[: ]/) : [defaultH, defaultM, defaultP];
+  const hour   = parts[0] || defaultH;
+  const minute = parts[1] || defaultM;
+  const period = parts[2] || defaultP;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
