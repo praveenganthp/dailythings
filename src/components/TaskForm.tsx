@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '../store/useTaskStore';
 import type { Priority, Category, Subtask, RecurrenceType } from '../types';
-import { X, Flag, Tag, Repeat, ListPlus, Trash2 } from 'lucide-react';
+import { X, Flag, Tag, Repeat, ListPlus, Trash2, Plus } from 'lucide-react';
 import { CustomTimePicker } from './CustomTimePicker';
 import { CustomSelect, type SelectOption } from './CustomSelect';
 import { SecureInput } from './ui/SecureInput';
 import { SecureTextarea } from './ui/SecureTextarea';
 import { hasImproperContent } from '../utils/sanitize';
+import { playButtonTapSound } from '../utils/sound';
 
 interface TaskFormProps {
   isOpen: boolean;
@@ -16,9 +17,9 @@ interface TaskFormProps {
 }
 
 const PRIORITY_OPTIONS: SelectOption<Priority>[] = [
-  { value: 'low', label: '🟢 Low' },
-  { value: 'medium', label: '🟡 Medium' },
-  { value: 'high', label: '🔴 High' },
+  { value: 'low', label: '🟢 Low Priority' },
+  { value: 'medium', label: '🟡 Medium Priority' },
+  { value: 'high', label: '🔴 High Priority' },
 ];
 
 const CATEGORY_OPTIONS: SelectOption<Category>[] = [
@@ -45,6 +46,7 @@ const TaskFormDialog = ({
   const addTask = useTaskStore((state) => state.addTask);
   const updateTask = useTaskStore((state) => state.updateTask);
   const tasks = useTaskStore((state) => state.tasks);
+  const settings = useTaskStore((state) => state.settings);
 
   const initialTask = editTaskId ? tasks.find((t) => t.id === editTaskId) : undefined;
 
@@ -67,6 +69,7 @@ const TaskFormDialog = ({
     };
     setSubtasks([...subtasks, newSub]);
     setSubtaskInput('');
+    if (settings.soundEnabled) playButtonTapSound();
   };
 
   const handleKeyDownSubtask = (e: React.KeyboardEvent) => {
@@ -98,85 +101,106 @@ const TaskFormDialog = ({
     } else {
       addTask(payload);
     }
+    if (settings.soundEnabled) playButtonTapSound();
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+      {/* Frosted Glass Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="absolute inset-0"
-        style={{ background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)' }}
+        style={{
+          background: 'rgba(8, 12, 21, 0.8)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+        }}
         onClick={onClose}
       />
 
-      {/* Modal */}
+      {/* Modal Dialog */}
       <motion.div
         initial={{ opacity: 0, scale: 0.94, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 16 }}
-        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 320 }}
         className="relative w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden rounded-2xl"
         style={{
-          background: 'var(--bg-card)',
-          border: '1px solid rgba(148,163,184,0.12)',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
+          background: 'var(--bg-card-solid)',
+          border: '1px solid var(--border-hover)',
+          boxShadow:
+            'inset 0 1px 0 rgba(255,255,255,0.1), 0 24px 64px rgba(0,0,0,0.6), 0 0 32px rgba(99,102,241,0.15)',
         }}
       >
-        {/* Header with gradient */}
+        {/* Header */}
         <div
-          className="px-6 py-5 flex justify-between items-center rounded-t-2xl shrink-0"
+          className="px-6 py-4.5 flex justify-between items-center relative overflow-hidden shrink-0"
           style={{
-            background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-            boxShadow: '0 8px 24px rgba(99,102,241,0.3)',
+            background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+            boxShadow: '0 4px 20px rgba(99,102,241,0.3)',
           }}
         >
-          <h2 className="text-lg font-bold text-white tracking-tight">
-            {editTaskId ? '✏️ Edit Task' : '✨ New Task'}
+          <h2 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            {editTaskId ? '✏️ Edit Task' : '✨ Create New Task'}
           </h2>
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1.5 rounded-lg transition-colors hover:bg-white/10 cursor-pointer"
-            style={{ color: 'rgba(255,255,255,0.8)' }}
+            className="p-1.5 rounded-lg transition-colors hover:bg-white/10 cursor-pointer text-white/80 hover:text-white"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Scrollable Form Body */}
+        {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
           {/* Title */}
           <div>
+            <label
+              htmlFor="task-title-input"
+              className="text-[10px] font-bold uppercase tracking-widest block mb-1.5"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              Task Title *
+            </label>
             <SecureInput
+              id="task-title-input"
               type="text"
               placeholder="What do you need to accomplish?"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
               autoFocus
-              className="input-premium w-full text-base font-medium"
+              className="input-premium w-full text-sm font-medium"
               style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
             />
           </div>
 
           {/* Description */}
           <div>
+            <label
+              htmlFor="task-notes-input"
+              className="text-[10px] font-bold uppercase tracking-widest block mb-1.5"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              Notes / Context (Optional)
+            </label>
             <SecureTextarea
-              placeholder="Notes or details... (optional)"
+              id="task-notes-input"
+              placeholder="Add details, links, or notes..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="input-premium w-full text-sm resize-none"
+              className="input-premium w-full text-xs resize-none"
               rows={2}
               style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
             />
           </div>
 
-          {/* Priority & Category */}
-          <div className="grid grid-cols-2 gap-4 relative z-20">
+          {/* Priority & Category Selects */}
+          <div className="grid grid-cols-2 gap-3.5 relative z-20">
             <CustomSelect<Priority>
               label="Priority"
               icon={<Flag size={12} />}
@@ -193,11 +217,11 @@ const TaskFormDialog = ({
             />
           </div>
 
-          {/* Recurrence & Times */}
-          <div className="space-y-4">
+          {/* Recurrence & Time Pickers */}
+          <div className="space-y-3.5">
             <div className="relative z-15">
               <CustomSelect<RecurrenceType>
-                label="Recurrence / Habit"
+                label="Habit Recurrence"
                 icon={<Repeat size={12} />}
                 value={recurring}
                 options={RECURRENCE_OPTIONS}
@@ -205,26 +229,36 @@ const TaskFormDialog = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4 relative z-10">
-              <CustomTimePicker label="Start" value={startTime} onChange={setStartTime} />
-              <CustomTimePicker label="End" value={endTime} onChange={setEndTime} />
+            <div className="grid grid-cols-2 gap-3.5 relative z-10">
+              <CustomTimePicker label="Start Time" value={startTime} onChange={setStartTime} />
+              <CustomTimePicker label="End Time" value={endTime} onChange={setEndTime} />
             </div>
           </div>
 
           {/* Subtasks Checklist Builder */}
-          <div className="space-y-2 pt-2 border-t" style={{ borderColor: 'var(--border-default)' }}>
-            <label
-              className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              <ListPlus size={12} /> Subtasks ({subtasks.length})
-            </label>
+          <div
+            className="space-y-2.5 pt-3 border-t"
+            style={{ borderColor: 'var(--border-default)' }}
+          >
+            <div className="flex items-center justify-between">
+              <label
+                className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <ListPlus size={12} /> Subtasks / Steps ({subtasks.length})
+              </label>
+              {subtasks.length > 0 && (
+                <span className="text-[10px]" style={{ color: 'var(--text-disabled)' }}>
+                  Break tasks down for focus
+                </span>
+              )}
+            </div>
 
             {/* Input row */}
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Add step (e.g. Write intro outline)..."
+                placeholder="Add actionable step..."
                 value={subtaskInput}
                 onChange={(e) => setSubtaskInput(e.target.value)}
                 onKeyDown={handleKeyDownSubtask}
@@ -235,9 +269,9 @@ const TaskFormDialog = ({
                 type="button"
                 onClick={handleAddSubtask}
                 disabled={!subtaskInput.trim()}
-                className="btn-secondary px-3 py-2 text-xs font-semibold cursor-pointer disabled:opacity-40"
+                className="btn-secondary px-3 py-2 text-xs font-semibold cursor-pointer disabled:opacity-40 flex items-center gap-1"
               >
-                + Add
+                <Plus size={12} /> Add
               </button>
             </div>
 
@@ -247,10 +281,10 @@ const TaskFormDialog = ({
                 {subtasks.map((st) => (
                   <div
                     key={st.id}
-                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs"
+                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs transition-all"
                     style={{
                       background: 'var(--bg-surface)',
-                      border: '1px solid rgba(148,163,184,0.1)',
+                      border: '1px solid var(--border-default)',
                       color: 'var(--text-secondary)',
                     }}
                   >
@@ -258,7 +292,7 @@ const TaskFormDialog = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveSubtask(st.id)}
-                      title="Remove subtask"
+                      title="Remove step"
                       className="p-1 rounded text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                     >
                       <Trash2 size={13} />
@@ -269,7 +303,7 @@ const TaskFormDialog = ({
             )}
           </div>
 
-          {/* Footer */}
+          {/* Action Buttons */}
           <div
             className="pt-4 flex justify-end gap-3 border-t shrink-0"
             style={{ borderColor: 'var(--border-default)' }}
@@ -277,7 +311,7 @@ const TaskFormDialog = ({
             <button
               type="button"
               onClick={onClose}
-              className="btn-secondary px-5 py-2.5 text-sm cursor-pointer"
+              className="btn-secondary px-4 py-2 text-xs font-semibold cursor-pointer"
             >
               Cancel
             </button>
@@ -286,9 +320,9 @@ const TaskFormDialog = ({
               disabled={
                 !title.trim() || hasImproperContent(title) || hasImproperContent(description)
               }
-              className="btn-primary px-6 py-2.5 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary px-5 py-2 text-xs font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {editTaskId ? 'Save Changes' : 'Add Task'}
+              {editTaskId ? 'Save Changes' : 'Create Task'}
             </button>
           </div>
         </form>

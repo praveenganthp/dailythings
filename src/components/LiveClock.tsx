@@ -2,7 +2,20 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 export const LiveClock = () => {
   const [now, setNow] = useState(new Date());
@@ -22,12 +35,20 @@ export const LiveClock = () => {
     <motion.div
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-end select-none"
+      transition={{ duration: 0.3 }}
+      className="flex flex-col items-end select-none px-3 py-1.5 rounded-2xl border"
+      style={{
+        background: "var(--bg-card)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderColor: "var(--border-default)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.15)",
+      }}
     >
       <div className="flex items-baseline gap-1">
         <span
-          className="text-xl md:text-2xl font-bold tabular-nums"
-          style={{ color: "var(--text-primary)", letterSpacing: "-0.03em" }}
+          className="text-lg sm:text-xl font-extrabold tabular-nums tracking-tight"
+          style={{ color: "var(--text-primary)" }}
         >
           {h12}:{m}
         </span>
@@ -35,21 +56,25 @@ export const LiveClock = () => {
           <AnimatePresence mode="popLayout">
             <motion.span
               key={s}
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
-              className="text-[10px] font-bold tabular-nums"
+              initial={{ opacity: 0, y: -2 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 2 }}
+              transition={{ duration: 0.15 }}
+              className="text-[9px] font-bold tabular-nums"
               style={{ color: "var(--text-muted)" }}
             >
               {s}
             </motion.span>
           </AnimatePresence>
-          <span className="text-[10px] font-bold tracking-wider" style={{ color: "var(--brand)" }}>
+          <span
+            className="text-[9px] font-bold uppercase tracking-wider"
+            style={{ color: "var(--brand)" }}
+          >
             {ampm}
           </span>
         </div>
       </div>
-      <p className="text-[10px] font-medium" style={{ color: "var(--text-disabled)" }}>
+      <p className="text-[10px] font-medium tracking-tight" style={{ color: "var(--text-disabled)" }}>
         {DAYS[now.getDay()]}, {MONTHS[now.getMonth()]} {now.getDate()}
       </p>
     </motion.div>

@@ -49,10 +49,10 @@ export const CustomSelect = <T extends string = string>({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer"
+        className="w-full flex items-center justify-between rounded-xl px-3 py-2 text-xs font-medium transition-all duration-200 cursor-pointer"
         style={{
           background: 'var(--bg-surface)',
-          border: isOpen ? '1px solid var(--brand)' : '1px solid rgba(148,163,184,0.15)',
+          border: isOpen ? '1px solid var(--brand)' : '1px solid var(--border-default)',
           color: 'var(--text-primary)',
           boxShadow: isOpen ? '0 0 0 3px rgba(99,102,241,0.2)' : 'none',
         }}
@@ -73,8 +73,10 @@ export const CustomSelect = <T extends string = string>({
             className="absolute z-50 mt-1 w-full rounded-xl overflow-hidden"
             style={{
               background: 'var(--bg-elevated)',
-              border: '1px solid rgba(148,163,184,0.15)',
-              boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid var(--border-hover)',
+              boxShadow: '0 20px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
             }}
           >
             {options.map((opt) => (
@@ -85,14 +87,14 @@ export const CustomSelect = <T extends string = string>({
                   onChange(opt.value);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 text-xs font-medium transition-colors cursor-pointer"
                 style={{
                   background: value === opt.value ? 'rgba(99,102,241,0.15)' : 'transparent',
                   color: value === opt.value ? '#818CF8' : 'var(--text-secondary)',
                   borderLeft: value === opt.value ? '2px solid var(--brand)' : '2px solid transparent',
                 }}
                 onMouseEnter={(e) => {
-                  if (value !== opt.value) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)';
+                  if (value !== opt.value) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)';
                 }}
                 onMouseLeave={(e) => {
                   if (value !== opt.value) (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
