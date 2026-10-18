@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '../store/useTaskStore';
 import { useNotificationStore } from '../store/useNotificationStore';
-import type { Task } from '../types';
+import type { Task, Priority } from '../types';
 import {
   Check,
   Clock,
@@ -13,27 +13,84 @@ import {
   Repeat,
   CheckSquare,
   ChevronDown,
+  Search,
+  X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
-import { playCompletionChime, playSubtaskTick } from '../utils/sound';
+import {
+  playTaskCompleteSound,
+  playSubtaskCheckSound,
+  playDeleteSound,
+} from '../utils/sound';
 
-const PRIORITY_STYLES: Record<string, { bg: string; text: string }> = {
-  high: { bg: 'rgba(239,68,68,0.12)', text: '#F87171' },
-  medium: { bg: 'rgba(245,158,11,0.12)', text: '#FBBF24' },
-  low: { bg: 'rgba(34,197,94,0.12)', text: '#4ADE80' },
+type FilterType = 'all' | 'active' | 'completed' | 'high';
+
+const PRIORITY_CONFIG: Record<
+  Priority,
+  { label: string; dot: string; bg: string; border: string; text: string }
+> = {
+  high: {
+    label: 'High',
+    dot: '#EF4444',
+    bg: 'rgba(239, 68, 68, 0.1)',
+    border: 'rgba(239, 68, 68, 0.25)',
+    text: '#F87171',
+  },
+  medium: {
+    label: 'Medium',
+    dot: '#F59E0B',
+    bg: 'rgba(245, 158, 11, 0.1)',
+    border: 'rgba(245, 158, 11, 0.25)',
+    text: '#FBBF24',
+  },
+  low: {
+    label: 'Low',
+    dot: '#22C55E',
+    bg: 'rgba(34, 197, 94, 0.1)',
+    border: 'rgba(34, 197, 94, 0.25)',
+    text: '#4ADE80',
+  },
 };
 
-const CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
-  work: { bg: 'rgba(99,102,241,0.12)', text: '#818CF8' },
-  personal: { bg: 'rgba(139,92,246,0.12)', text: '#C084FC' },
-  health: { bg: 'rgba(34,197,94,0.12)', text: '#4ADE80' },
-  learning: { bg: 'rgba(56,189,248,0.12)', text: '#60A5FA' },
-  other: { bg: 'rgba(148,163,184,0.1)', text: '#94A3B8' },
+const CATEGORY_CONFIG: Record<
+  string,
+  { dot: string; bg: string; border: string; text: string }
+> = {
+  work: {
+    dot: '#818CF8',
+    bg: 'rgba(99, 102, 241, 0.1)',
+    border: 'rgba(99, 102, 241, 0.2)',
+    text: '#A5B4FC',
+  },
+  personal: {
+    dot: '#C084FC',
+    bg: 'rgba(168, 85, 247, 0.1)',
+    border: 'rgba(168, 85, 247, 0.2)',
+    text: '#E9D5FF',
+  },
+  health: {
+    dot: '#4ADE80',
+    bg: 'rgba(34, 197, 94, 0.1)',
+    border: 'rgba(34, 197, 94, 0.2)',
+    text: '#86EFAC',
+  },
+  learning: {
+    dot: '#38BDF8',
+    bg: 'rgba(56, 189, 248, 0.1)',
+    border: 'rgba(56, 189, 248, 0.2)',
+    text: '#BAE6FD',
+  },
+  other: {
+    dot: '#94A3B8',
+    bg: 'rgba(148, 163, 184, 0.1)',
+    border: 'rgba(148, 163, 184, 0.2)',
+    text: '#CBD5E1',
+  },
 };
 
-/* ── Shared card content (used by both draggable and static) ── */
+/* ── Task Card Content ── */
 const TaskCardContent = ({
   task,
   onEdit,
@@ -59,7 +116,7 @@ const TaskCardContent = ({
   const handleToggle = () => {
     if (!task.completed) {
       showReward(task.priority, task.category);
-      if (settings.soundEnabled) playCompletionChime();
+      if (settings.soundEnabled) playTaskCompleteSound();
     }
     toggleTaskCompletion(task.id);
   };
@@ -74,81 +131,105 @@ const TaskCardContent = ({
 
     if (settings.soundEnabled) {
       if (willCompleteTask && !task.completed) {
-        playCompletionChime();
+        playTaskCompleteSound();
         showReward(task.priority, task.category);
       } else {
-        playSubtaskTick();
+        playSubtaskCheckSound();
       }
     }
   };
 
-  const pStyle = PRIORITY_STYLES[task.priority] ?? PRIORITY_STYLES.medium;
-  const cStyle = CATEGORY_STYLES[task.category] ?? CATEGORY_STYLES.other;
+  const handleDelete = () => {
+    if (settings.soundEnabled) playDeleteSound();
+    deleteTask(task.id);
+    setShowOptions(false);
+  };
+
+  const priorityMeta = PRIORITY_CONFIG[task.priority] ?? PRIORITY_CONFIG.medium;
+  const categoryMeta = CATEGORY_CONFIG[task.category] ?? CATEGORY_CONFIG.other;
 
   const totalSubtasks = task.subtasks ? task.subtasks.length : 0;
   const completedSubtasks = task.subtasks ? task.subtasks.filter((s) => s.completed).length : 0;
 
   return (
     <div
-      className="group flex flex-col p-4 rounded-2xl transition-all duration-200"
+      className="group flex flex-col p-4 rounded-2xl transition-all duration-200 relative overflow-hidden"
       style={{
         background: isDragging
           ? 'var(--bg-elevated)'
           : task.completed
-            ? 'rgba(30,41,59,0.35)'
+            ? 'rgba(17, 24, 39, 0.4)'
             : 'var(--bg-card)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         border: isDragging
-          ? '1px solid rgba(99,102,241,0.6)'
+          ? '1px solid rgba(99, 102, 241, 0.8)'
           : task.completed
-            ? '1px solid rgba(148,163,184,0.05)'
-            : '1px solid rgba(148,163,184,0.1)',
+            ? '1px solid rgba(255, 255, 255, 0.04)'
+            : '1px solid var(--border-default)',
         boxShadow: isDragging
-          ? '0 20px 48px rgba(0,0,0,0.5), 0 0 0 2px #6366F1'
+          ? '0 20px 48px rgba(0,0,0,0.6), 0 0 0 2px #6366F1'
           : task.completed
             ? 'none'
-            : '0 2px 12px rgba(0,0,0,0.15)',
-        opacity: task.completed ? 0.6 : 1,
-        transform: isDragging ? 'rotate(1.5deg)' : 'none',
+            : 'inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 16px rgba(0,0,0,0.25)',
+        opacity: task.completed ? 0.65 : 1,
+        transform: isDragging ? 'rotate(1.2deg) scale(1.01)' : 'none',
       }}
     >
+      {/* Specular edge shimmer on active cards */}
+      {!task.completed && (
+        <div
+          className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+          }}
+        />
+      )}
+
       <div className="flex items-start gap-3">
         {/* Drag Handle */}
         {dragHandleProps && (
           <div
             {...dragHandleProps}
-            className="mt-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing flex-shrink-0"
+            className="mt-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing shrink-0"
             style={{ color: 'var(--text-disabled)' }}
+            title="Drag to reorder"
           >
             <GripVertical size={16} />
           </div>
         )}
 
-        {/* Completion toggle */}
+        {/* Completion Checkbox */}
         <button
           onClick={handleToggle}
-          title="Toggle Complete"
-          className="mt-0.5 w-5 h-5 rounded-md flex items-center justify-center transition-all duration-200 flex-shrink-0 cursor-pointer"
+          title="Toggle completion"
+          className="mt-0.5 w-5 h-5 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0 cursor-pointer focus:outline-none"
           style={{
-            background: task.completed ? 'var(--success)' : 'transparent',
+            background: task.completed
+              ? 'linear-gradient(135deg, #10B981, #22C55E)'
+              : 'rgba(255, 255, 255, 0.04)',
             border: task.completed
-              ? '2px solid var(--success)'
-              : '2px solid rgba(148,163,184,0.3)',
-            boxShadow: task.completed ? '0 0 12px rgba(34,197,94,0.45)' : 'none',
+              ? '1.5px solid #22C55E'
+              : '1.5px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: task.completed
+              ? '0 0 14px rgba(34,197,94,0.45), inset 0 1px 0 rgba(255,255,255,0.4)'
+              : 'none',
           }}
         >
           <motion.div
             initial={false}
             animate={{ scale: task.completed ? 1 : 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
           >
-            <Check size={11} strokeWidth={3} color="white" />
+            <Check size={12} strokeWidth={3} color="white" />
           </motion.div>
         </button>
 
-        {/* Content */}
+        {/* Task Details */}
         <div className="flex-1 min-w-0">
           <h4
-            className="text-sm font-semibold truncate mb-0.5"
+            className="text-sm font-semibold truncate mb-0.5 tracking-tight transition-all"
             style={{
               color: task.completed ? 'var(--text-muted)' : 'var(--text-primary)',
               textDecoration: task.completed ? 'line-through' : 'none',
@@ -158,58 +239,87 @@ const TaskCardContent = ({
           </h4>
 
           {task.description && (
-            <p className="text-xs truncate mb-2" style={{ color: 'var(--text-disabled)' }}>
+            <p className="text-xs truncate mb-2.5" style={{ color: 'var(--text-disabled)' }}>
               {task.description}
             </p>
           )}
 
-          {/* Badges row */}
-          <div className="flex flex-wrap items-center gap-1.5">
+          {/* Badges Row */}
+          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+            {/* Priority Badge */}
             <span
-              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{ background: pStyle.bg, color: pStyle.text }}
+              className="badge-subtle"
+              style={{
+                background: priorityMeta.bg,
+                borderColor: priorityMeta.border,
+                color: priorityMeta.text,
+              }}
             >
-              {task.priority}
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: priorityMeta.dot }}
+              />
+              {priorityMeta.label}
             </span>
 
+            {/* Category Badge */}
             <span
-              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{ background: cStyle.bg, color: cStyle.text }}
+              className="badge-subtle capitalize"
+              style={{
+                background: categoryMeta.bg,
+                borderColor: categoryMeta.border,
+                color: categoryMeta.text,
+              }}
             >
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: categoryMeta.dot }}
+              />
               {task.category}
             </span>
 
+            {/* Recurrence Badge */}
             {task.recurring && task.recurring !== 'none' && (
               <span
-                className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1"
-                style={{ background: 'rgba(56,189,248,0.12)', color: '#38BDF8' }}
+                className="badge-subtle"
+                style={{
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  borderColor: 'rgba(56, 189, 248, 0.25)',
+                  color: '#38BDF8',
+                }}
               >
-                <Repeat size={9} />
+                <Repeat size={10} className="shrink-0" />
                 {task.recurring === 'daily' ? 'Daily' : 'Weekdays'}
               </span>
             )}
 
+            {/* Time Window Badge */}
             {(task.startTime || task.endTime) && (
               <span
-                className="text-[10px] font-medium flex items-center gap-1 px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(148,163,184,0.08)', color: 'var(--text-muted)' }}
+                className="badge-subtle"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderColor: 'var(--border-default)',
+                  color: 'var(--text-muted)',
+                }}
               >
-                <Clock size={9} />
+                <Clock size={10} className="shrink-0" />
                 {task.startTime}
                 {task.startTime && task.endTime && <ArrowRight size={8} />}
                 {task.endTime}
               </span>
             )}
 
-            {/* Subtasks toggle badge */}
+            {/* Subtasks Toggle Pill */}
             {totalSubtasks > 0 && (
               <button
                 type="button"
                 onClick={() => setShowSubtasks(!showSubtasks)}
-                className="text-[10px] font-semibold flex items-center gap-1.5 px-2 py-0.5 rounded-full cursor-pointer transition-colors"
+                className="badge-subtle cursor-pointer transition-all hover:brightness-110 focus:outline-none"
                 style={{
-                  background: 'rgba(99,102,241,0.12)',
-                  color: '#818CF8',
+                  background: 'rgba(99, 102, 241, 0.12)',
+                  borderColor: 'rgba(99, 102, 241, 0.28)',
+                  color: '#A5B4FC',
                 }}
               >
                 <CheckSquare size={10} />
@@ -225,12 +335,12 @@ const TaskCardContent = ({
           </div>
         </div>
 
-        {/* Options */}
-        <div className="relative flex-shrink-0">
+        {/* Options Menu */}
+        <div className="relative shrink-0">
           <button
             onClick={() => setShowOptions((v) => !v)}
             title="Options"
-            className="p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer"
+            className="p-1.5 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-white/5"
             style={{ color: 'var(--text-muted)' }}
           >
             <MoreVertical size={16} />
@@ -239,16 +349,18 @@ const TaskCardContent = ({
           <AnimatePresence>
             {showOptions && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowOptions(false)} />
+                <div className="fixed inset-0 z-20" onClick={() => setShowOptions(false)} />
                 <motion.div
                   initial={{ opacity: 0, scale: 0.92, y: -4 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92 }}
-                  className="absolute right-0 top-8 w-36 rounded-xl overflow-hidden z-20"
+                  transition={{ duration: 0.12 }}
+                  className="absolute right-0 top-8 w-36 rounded-xl overflow-hidden z-30"
                   style={{
                     background: 'var(--bg-elevated)',
-                    border: '1px solid rgba(148,163,184,0.15)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid var(--border-hover)',
+                    boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
                   }}
                 >
                   <MenuBtn
@@ -256,20 +368,17 @@ const TaskCardContent = ({
                       onEdit(task.id);
                       setShowOptions(false);
                     }}
-                    icon={<Edit3 size={12} />}
-                    label="Edit"
+                    icon={<Edit3 size={13} />}
+                    label="Edit Task"
                     color="var(--text-secondary)"
-                    hoverBg="rgba(255,255,255,0.05)"
+                    hoverBg="rgba(255,255,255,0.06)"
                   />
                   <MenuBtn
-                    onClick={() => {
-                      deleteTask(task.id);
-                      setShowOptions(false);
-                    }}
-                    icon={<Trash2 size={12} />}
+                    onClick={handleDelete}
+                    icon={<Trash2 size={13} />}
                     label="Delete"
                     color="var(--danger)"
-                    hoverBg="rgba(239,68,68,0.08)"
+                    hoverBg="rgba(239,68,68,0.12)"
                   />
                 </motion.div>
               </>
@@ -284,14 +393,20 @@ const TaskCardContent = ({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.2 }}
           className="mt-3 pt-3 pl-8 border-t space-y-1.5"
-          style={{ borderColor: 'rgba(148,163,184,0.1)' }}
+          style={{ borderColor: 'rgba(255, 255, 255, 0.06)' }}
         >
-          {/* Mini progress bar */}
-          <div className="w-full bg-slate-800/80 rounded-full h-1 overflow-hidden mb-2">
+          {/* Micro Progress Track */}
+          <div className="w-full bg-slate-800/80 rounded-full h-1 overflow-hidden mb-2.5">
             <motion.div
               className="h-full rounded-full"
-              style={{ background: 'var(--brand)' }}
+              style={{
+                background:
+                  task.progress === 100
+                    ? 'linear-gradient(90deg, #10B981, #22C55E)'
+                    : 'linear-gradient(90deg, #6366F1, #8B5CF6)',
+              }}
               initial={{ width: 0 }}
               animate={{ width: `${task.progress}%` }}
               transition={{ duration: 0.3 }}
@@ -302,18 +417,19 @@ const TaskCardContent = ({
             <div
               key={st.id}
               onClick={() => handleToggleSubtask(st.id)}
-              className="flex items-center gap-2 py-1 px-2 rounded-lg cursor-pointer hover:bg-white/5 transition-colors group/sub"
+              className="flex items-center gap-2.5 py-1 px-2 rounded-lg cursor-pointer hover:bg-white/5 transition-colors group/sub"
             >
               <div
-                className="w-3.5 h-3.5 rounded flex items-center justify-center transition-all"
+                className="w-4 h-4 rounded-md flex items-center justify-center transition-all duration-150 shrink-0"
                 style={{
                   background: st.completed ? 'var(--brand)' : 'transparent',
                   border: st.completed
                     ? '1.5px solid var(--brand)'
-                    : '1.5px solid rgba(148,163,184,0.4)',
+                    : '1.5px solid rgba(255, 255, 255, 0.25)',
+                  boxShadow: st.completed ? '0 0 10px rgba(99,102,241,0.4)' : 'none',
                 }}
               >
-                {st.completed && <Check size={9} strokeWidth={3} color="white" />}
+                {st.completed && <Check size={10} strokeWidth={3} color="white" />}
               </div>
               <span
                 className="text-xs transition-colors"
@@ -347,7 +463,7 @@ const MenuBtn = ({
 }) => (
   <button
     onClick={onClick}
-    className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
+    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium transition-colors cursor-pointer text-left"
     style={{ color }}
     onMouseEnter={(e) => (e.currentTarget.style.background = hoverBg)}
     onMouseLeave={(e) => (e.currentTarget.style.background = '')}
@@ -356,7 +472,7 @@ const MenuBtn = ({
   </button>
 );
 
-/* ── Draggable wrapper (active tasks only) ── */
+/* ── Draggable wrapper (active tasks) ── */
 const DraggableTaskItem = ({
   task,
   index,
@@ -380,78 +496,229 @@ const DraggableTaskItem = ({
   </Draggable>
 );
 
-/* ── Static wrapper (completed tasks — NO Draggable) ── */
+/* ── Static wrapper (completed tasks) ── */
 const StaticTaskItem = ({ task, onEdit }: { task: Task; onEdit: (id: string) => void }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mb-2.5">
+  <motion.div
+    initial={{ opacity: 0, y: 4 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -4 }}
+    className="mb-2.5"
+  >
     <TaskCardContent task={task} onEdit={onEdit} />
   </motion.div>
 );
 
-/* ── Main TaskList ── */
+/* ── Main TaskList Component ── */
 export const TaskList = ({ onEditTask }: { onEditTask: (id: string) => void }) => {
   const tasks = useTaskStore((state) => state.tasks);
   const reorderTasks = useTaskStore((state) => state.reorderTasks);
 
-  const pendingTasks = tasks.filter((t) => !t.completed);
-  const completedTasks = tasks.filter((t) => t.completed);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter & Search Logic
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      // Search match
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesTitle = t.title.toLowerCase().includes(q);
+        const matchesDesc = t.description?.toLowerCase().includes(q);
+        const matchesSubtasks = t.subtasks?.some((s) => s.title.toLowerCase().includes(q));
+        if (!matchesTitle && !matchesDesc && !matchesSubtasks) return false;
+      }
+
+      // Filter match
+      if (activeFilter === 'active') return !t.completed;
+      if (activeFilter === 'completed') return t.completed;
+      if (activeFilter === 'high') return t.priority === 'high';
+      return true;
+    });
+  }, [tasks, activeFilter, searchQuery]);
+
+  const pendingFiltered = filteredTasks.filter((t) => !t.completed);
+  const completedFiltered = filteredTasks.filter((t) => t.completed);
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-    reorderTasks(result.source.index, result.destination.index);
+    // Map visual index to global index
+    const sourceTask = pendingFiltered[result.source.index];
+    const destTask = pendingFiltered[result.destination.index];
+    if (!sourceTask || !destTask) return;
+
+    const sourceGlobalIdx = tasks.findIndex((t) => t.id === sourceTask.id);
+    const destGlobalIdx = tasks.findIndex((t) => t.id === destTask.id);
+
+    if (sourceGlobalIdx !== -1 && destGlobalIdx !== -1) {
+      reorderTasks(sourceGlobalIdx, destGlobalIdx);
+    }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* ── Active / Draggable Tasks ── */}
-      {pendingTasks.length > 0 && (
-        <div>
-          <p
-            className="text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2"
-            style={{ color: 'var(--text-disabled)' }}
-          >
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-pulse"
-              style={{ background: 'var(--brand)' }}
-            />
-            Active · {pendingTasks.length}
-          </p>
+  const isDndEnabled = activeFilter === 'all' && !searchQuery.trim();
 
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="active-tasks">
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  style={{
-                    background: snapshot.isDraggingOver ? 'rgba(99,102,241,0.04)' : 'transparent',
-                    borderRadius: 16,
-                    transition: 'background 0.2s',
-                    padding: 2,
-                  }}
-                >
-                  {pendingTasks.map((task, idx) => (
-                    <DraggableTaskItem key={task.id} task={task} index={idx} onEdit={onEditTask} />
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+  return (
+    <div className="space-y-4">
+      {/* ── Filter Bar & Quick Search ──────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2">
+        {/* Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {(
+            [
+              { id: 'all', label: `All (${tasks.length})` },
+              { id: 'active', label: `Active (${tasks.filter((t) => !t.completed).length})` },
+              { id: 'completed', label: `Done (${tasks.filter((t) => t.completed).length})` },
+              { id: 'high', label: `High Priority (${tasks.filter((t) => t.priority === 'high').length})` },
+            ] as const
+          ).map((tab) => {
+            const isActive = activeFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveFilter(tab.id)}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer focus:outline-none"
+                style={{
+                  background: isActive ? 'var(--brand)' : 'rgba(255, 255, 255, 0.04)',
+                  color: isActive ? '#FFFFFF' : 'var(--text-muted)',
+                  border: isActive
+                    ? '1px solid rgba(255, 255, 255, 0.2)'
+                    : '1px solid var(--border-default)',
+                  boxShadow: isActive ? '0 2px 10px rgba(99,102,241,0.35)' : 'none',
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative min-w-[160px] sm:w-48">
+          <Search
+            size={13}
+            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--text-disabled)' }}
+          />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search tasks..."
+            className="w-full pl-8 pr-7 py-1.5 rounded-xl text-xs outline-none transition-all"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-primary)',
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded cursor-pointer"
+              style={{ color: 'var(--text-disabled)' }}
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Empty Filter Results ───────────────────────── */}
+      {filteredTasks.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="glass-card p-8 flex flex-col items-center justify-center text-center min-h-[180px]"
+        >
+          <p className="text-2xl mb-1">🔍</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            No matching tasks
+          </p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            Try adjusting your search query or filter tab.
+          </p>
+          {(searchQuery || activeFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setActiveFilter('all');
+              }}
+              className="mt-3 text-xs text-indigo-400 hover:underline cursor-pointer font-semibold"
+            >
+              Clear filters
+            </button>
+          )}
+        </motion.div>
+      )}
+
+      {/* ── Active Tasks ──────────────────────────────── */}
+      {pendingFiltered.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <p
+              className="text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+              style={{ color: 'var(--text-disabled)' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse bg-indigo-400" />
+              Active · {pendingFiltered.length}
+            </p>
+            {isDndEnabled && (
+              <span className="text-[10px]" style={{ color: 'var(--text-disabled)' }}>
+                Drag to prioritize
+              </span>
+            )}
+          </div>
+
+          {isDndEnabled ? (
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="active-tasks">
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    style={{
+                      background: snapshot.isDraggingOver
+                        ? 'rgba(99,102,241,0.04)'
+                        : 'transparent',
+                      borderRadius: 16,
+                      transition: 'background 0.2s',
+                    }}
+                  >
+                    {pendingFiltered.map((task, idx) => (
+                      <DraggableTaskItem
+                        key={task.id}
+                        task={task}
+                        index={idx}
+                        onEdit={onEditTask}
+                      />
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          ) : (
+            <div>
+              {pendingFiltered.map((task) => (
+                <StaticTaskItem key={task.id} task={task} onEdit={onEditTask} />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── Completed (static, no DnD context needed) ── */}
-      {completedTasks.length > 0 && (
-        <div>
+      {/* ── Completed Tasks ────────────────────────────── */}
+      {completedFiltered.length > 0 && (
+        <div className="pt-2">
           <p
-            className="text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2"
+            className="text-xs font-bold uppercase tracking-widest mb-2.5 flex items-center gap-2"
             style={{ color: 'var(--text-disabled)' }}
           >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--success)' }} />
-            Done · {completedTasks.length}
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Done · {completedFiltered.length}
           </p>
           <AnimatePresence mode="popLayout">
-            {completedTasks.map((task) => (
+            {completedFiltered.map((task) => (
               <StaticTaskItem key={task.id} task={task} onEdit={onEditTask} />
             ))}
           </AnimatePresence>

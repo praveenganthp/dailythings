@@ -12,37 +12,58 @@ export const AppFooter = () => {
 
   return (
     <>
-      <footer className="w-full mt-auto shrink-0 border-t border-[rgba(148,163,184,0.12)] bg-[#0F172A]/80 backdrop-blur-md">
-        <div className="max-w-full mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
-           <div className="text-[12px] text-[#94A3B8] font-medium tracking-wide text-center sm:text-left">
-            
-            <span className="ml-1 sm:ml-2">Built with care, for your better days 💙</span>
-          </div>
-          <div className="text-[12px] text-[#94A3B8] font-medium tracking-wide text-center sm:text-left">
-            <span>© {new Date().getFullYear()} Daily Things.</span>
-            <span className="ml-1 sm:ml-2">crafted by <a href={authorUrl} target="_blank" rel="noopener noreferrer" className="text-[#818CF8] hover:text-[#C084FC] transition-colors focus:outline-none">praveen</a></span>
+      <footer
+        className="w-full mt-auto shrink-0 border-t transition-colors duration-200"
+        style={{
+          borderColor: 'var(--border-default)',
+          background: 'var(--bg-card)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+        }}
+      >
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+            <span>Built with care, for your better days 💙</span>
           </div>
 
-          <div className="flex items-center gap-4 text-[12px] font-medium">
-            <button 
+          <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+            <span>© {new Date().getFullYear()} Daily Things · </span>
+            <span>
+              crafted by{' '}
+              <a
+                href={authorUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors focus:outline-none"
+              >
+                praveen
+              </a>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3.5 text-xs font-medium">
+            <button
               onClick={() => setFeedbackOpen(true)}
-              className="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors focus:outline-none"
+              className="hover:text-white transition-colors cursor-pointer focus:outline-none"
+              style={{ color: 'var(--text-muted)' }}
             >
               Feedback
             </button>
-            <span className="text-[#334155]">|</span>
-            <button 
+            <span style={{ color: 'var(--text-disabled)' }}>·</span>
+            <button
               onClick={() => setPrivacyOpen(true)}
-              className="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors focus:outline-none"
+              className="hover:text-white transition-colors cursor-pointer focus:outline-none"
+              style={{ color: 'var(--text-muted)' }}
             >
-              Privacy Policy
+              Privacy
             </button>
-            <span className="text-[#334155]">|</span>
-            <button 
+            <span style={{ color: 'var(--text-disabled)' }}>·</span>
+            <button
               onClick={() => setContactOpen(true)}
-              className="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors focus:outline-none"
+              className="hover:text-white transition-colors cursor-pointer focus:outline-none"
+              style={{ color: 'var(--text-muted)' }}
             >
-              Contact Us
+              Contact
             </button>
           </div>
         </div>
