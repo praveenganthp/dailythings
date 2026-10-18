@@ -52,11 +52,11 @@ export const Onboarding = () => {
               style={{ color: 'var(--text-primary)' }}
             >
               Welcome to{' '}
-              <span className="text-gradient">Day Things</span>
+              <span className="text-gradient">DailyThings</span>
             </h1>
 
             <p className="text-sm mb-8" style={{ color: 'var(--text-muted)' }}>
-              Your premium daily task manager. Let's make today count — what should we call you?
+              Your premium daily habit & task flow. Let's make today count — what should we call you?
             </p>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -74,7 +74,7 @@ export const Onboarding = () => {
               <button
                 type="submit"
                 disabled={!name.trim()}
-                className="btn-primary py-4 text-base"
+                className="btn-primary py-4 text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Get Started 🚀
               </button>

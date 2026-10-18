@@ -1,5 +1,6 @@
 export type Priority = 'low' | 'medium' | 'high';
 export type Category = 'work' | 'personal' | 'health' | 'learning' | 'other';
+export type RecurrenceType = 'none' | 'daily' | 'weekdays';
 
 export interface Subtask {
   id: string;
@@ -18,6 +19,7 @@ export interface Task {
   progress: number; // 0 to 100
   completed: boolean;
   subtasks: Subtask[];
+  recurring?: RecurrenceType;
   createdAt: string;
 }
 
@@ -26,12 +28,9 @@ export interface DailySummary {
   totalTasks: number;
   completedTasks: number;
   pendingTasks: number;
-  inProgressTasks: number;
-  overdueTasks: number; // Assuming we calculate this based on time
+  inProgressTasks?: number;
   completionPercentage: number;
-  productivityScore: number;
-  priorities: Record<Priority, number>;
-  categories: Record<Category, number>;
+  productivityScore?: number;
 }
 
 export interface UserSettings {
@@ -40,4 +39,5 @@ export interface UserSettings {
   carryForwardUnfinished: boolean;
   theme: 'dark' | 'light' | 'system';
   isOnboarded: boolean;
+  soundEnabled: boolean;
 }
