@@ -194,7 +194,7 @@ export const Dashboard = () => {
                 }}
               >
                 {pct === 100
-                  ? '🎉 All Done! Peak Day!'
+                  ? 'All Done! Peak Day!'
                   : pct >= 50
                     ? '🚀 Halfway mark reached'
                     : '💪 Ready to conquer'}

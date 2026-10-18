@@ -153,7 +153,9 @@ const TaskCardContent = ({
 
   return (
     <div
-      className="group flex flex-col p-4 rounded-2xl transition-all duration-200 relative overflow-hidden"
+      className={`group flex flex-col p-4 rounded-2xl transition-all duration-200 relative ${
+        showOptions ? 'z-30' : 'z-10'
+      }`}
       style={{
         background: isDragging
           ? 'var(--bg-elevated)'
@@ -179,7 +181,7 @@ const TaskCardContent = ({
       {/* Specular edge shimmer on active cards */}
       {!task.completed && (
         <div
-          className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          className="absolute top-0 left-0 right-0 h-px pointer-events-none rounded-t-2xl"
           style={{
             background:
               'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
@@ -349,18 +351,17 @@ const TaskCardContent = ({
           <AnimatePresence>
             {showOptions && (
               <>
-                <div className="fixed inset-0 z-20" onClick={() => setShowOptions(false)} />
+                <div className="fixed inset-0 z-40" onClick={() => setShowOptions(false)} />
                 <motion.div
                   initial={{ opacity: 0, scale: 0.92, y: -4 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ duration: 0.12 }}
-                  className="absolute right-0 top-8 w-36 rounded-xl overflow-hidden z-30"
+                  className="absolute right-0 top-8 w-36 rounded-xl overflow-hidden z-50"
                   style={{
-                    background: 'var(--bg-elevated)',
-                    backdropFilter: 'blur(20px)',
+                    background: 'var(--bg-card-solid)',
                     border: '1px solid var(--border-hover)',
-                    boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+                    boxShadow: '0 16px 40px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.08)',
                   }}
                 >
                   <MenuBtn
