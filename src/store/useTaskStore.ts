@@ -18,6 +18,12 @@ interface TaskState {
   updateSettings: (settings: Partial<UserSettings>) => void;
   recordDailySummary: (summary: DailySummary) => void;
   resetDailyTasks: (newDate: string, carryForward: boolean) => void;
+  importFullBackup: (backup: {
+    tasks: Task[];
+    history: Record<string, DailySummary>;
+    settings: UserSettings;
+    dateLastReset: string;
+  }) => void;
   getStreak: () => number;
 }
 
@@ -135,6 +141,15 @@ export const useTaskStore = create<TaskState>()(
               ...state.history,
               [summary.date]: summary,
             },
+          }));
+        },
+
+        importFullBackup: (backup) => {
+          set(() => ({
+            tasks: backup.tasks,
+            history: backup.history,
+            settings: backup.settings,
+            dateLastReset: backup.dateLastReset,
           }));
         },
 
