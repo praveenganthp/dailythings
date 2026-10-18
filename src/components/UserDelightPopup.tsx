@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface UserDelightPopupProps {
@@ -34,18 +34,9 @@ const SURPRISES = [
   { emoji: "🌟", title: "Star Player", body: "If life was a game, you'd be carrying the team right now.\n\nIncredible work.", type: "achievement" },
 
   // FUTURE SELF
-  { emoji: "👀", title: "Message From Your Future Self", body: "Hey {name},\n\nI’m living the life you’re working toward right now.\n\nAnd I just wanted to say… thank you for not quitting today.\n\nIt mattered more than you think.", type: "future" },
-  { emoji: "⏳", title: "Fast Forward 5 Years", body: "If you could see where you'll be in 5 years...\n\nYou'd laugh at how worried you are right now.\n\nKeep building.", type: "future" },
-  { emoji: "🔮", title: "A Glimpse Ahead", body: "Everything you're sacrificing right now?\n\nIt's going to pay off in ways you can't even imagine.\n\nJust wait.", type: "future" },
-  { emoji: "💌", title: "Future You Says Thanks", body: "Thanks for putting in the hours {name}.\n\nWe're going to make it.\n\nJust don't stop.", type: "future" },
-  { emoji: "🌅", title: "The Horizon is Bright", body: "You are laying the foundation for an empire.\n\nFuture you is heavily profiting off today's sweat.", type: "future" },
-
-  // CALM / REST
-  { emoji: "🌿", title: "Pause. Breathe.", body: "You don’t always have to push.\n\nSometimes growth looks like rest.\n\nTake a breath. Reset. Then come back stronger.", type: "calm" },
-  { emoji: "☕", title: "Time for a Break?", body: "You've been going hard.\n\nIt's okay to sip some coffee and literally do nothing for 10 minutes.\n\nThe work will be there.", type: "calm" },
-  { emoji: "🌊", title: "Find Your Flow", body: "Stop forcing it.\n\nRelax your shoulders. Unclench your jaw.\n\nLet the work flow through you naturally.", type: "calm" },
-  { emoji: "🎧", title: "Zone Out", body: "Put on your favorite song.\n\nClose your eyes for one entire minute.\n\nYou deserve a mental reset.", type: "calm" },
-  { emoji: "🌙", title: "Stillness is Strength", body: "You don't always have to be moving at 100mph.\n\nSometimes the best action is no action.", type: "calm" },
+  { emoji: "👀", title: "Message From Your Future Self", body: "Hey {name},\n\nI’m living the life you’re working toward right now.\n\nThank you for not quitting on the hard days.\n\nIt was all worth it.", type: "future" },
+  { emoji: "⏳", title: "A Quick Reminder From Ahead", body: "You were worried about so many things that never ended up happening.\n\nTrust the process, {name}.\n\nYou figured it out.", type: "future" },
+  { emoji: "🕊️", title: "Peace is Waiting", body: "The chaos you're navigating today? It turns into the calm you enjoy tomorrow.\n\nKeep going.", type: "future" },
 
   // FUN / LIGHT
   { emoji: "😎", title: "You’re Built Different", body: "Not everyone keeps going when things get tough.\n\nBut you do.\n\nThat’s what separates you.", type: "fun" },
@@ -58,105 +49,113 @@ const SURPRISES = [
 
 let lastShownIndex = -1;
 
-export const UserDelightPopup = ({ isOpen, onClose, userName }: UserDelightPopupProps) => {
-  const [content, setContent] = useState(SURPRISES[0]);
-
-  useEffect(() => {
-    if (isOpen) {
-      let nextIdx = Math.floor(Math.random() * SURPRISES.length);
-      if (nextIdx === lastShownIndex) {
-        nextIdx = (nextIdx + 1) % SURPRISES.length;
-      }
-      lastShownIndex = nextIdx;
-      setContent(SURPRISES[nextIdx]);
+const UserDelightDialogContent = ({
+  onClose,
+  userName,
+}: {
+  onClose: () => void;
+  userName: string;
+}) => {
+  const [content] = useState(() => {
+    let nextIdx = Math.floor(Math.random() * SURPRISES.length);
+    if (nextIdx === lastShownIndex) {
+      nextIdx = (nextIdx + 1) % SURPRISES.length;
     }
-  }, [isOpen]);
+    lastShownIndex = nextIdx;
+    return SURPRISES[nextIdx];
+  });
 
   const bodyText = content.body.replace(/{name}/g, userName);
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0"
+        style={{
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+        }}
+        onClick={onClose}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.85, y: 15 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300, duration: 0.3 }}
+        className="relative w-full max-w-sm rounded-[24px] overflow-hidden"
+        style={{
+          background: 'linear-gradient(145deg, #1E293B, #0F172A)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(99,102,241,0.15)',
+        }}
+      >
+        {/* Header Glow */}
+        <div
+          className="px-6 py-5 flex flex-col items-center justify-center relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}
+        >
+          {/* Breathing Glow */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0"
+            animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.05, 1] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute inset-0 opacity-80"
             style={{
-              background: 'rgba(15, 23, 42, 0.75)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
+              background:
+                'radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 60%)',
             }}
-            onClick={onClose}
           />
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.85, y: 15 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300, duration: 0.3 }}
-            className="relative w-full max-w-sm rounded-[24px] overflow-hidden"
-            style={{
-              background: 'linear-gradient(145deg, #1E293B, #0F172A)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(99,102,241,0.15)',
-            }}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            title="Close"
           >
-            {/* Header Glow */}
-            <div
-              className="px-6 py-5 flex flex-col items-center justify-center relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}
-            >
-              {/* Breathing Glow */}
-              <motion.div
-                animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.05, 1] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute inset-0 opacity-80"
-                style={{ background: 'radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 60%)' }}
-              />
-              
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                ✕
-              </button>
+            ✕
+          </button>
 
-              <motion.div
-                animate={{ y: [0, -8, 0], rotate: [-2, 2, -2] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="text-6xl mb-2 relative z-10 drop-shadow-xl mt-3"
-              >
-                {content.emoji}
-              </motion.div>
-            </div>
-
-            {/* Content Body */}
-            <div className="px-7 py-8 flex flex-col items-center text-center">
-              <motion.h2
-                className="text-xl font-bold mb-4 tracking-tight"
-                style={{ color: '#F8FAFC' }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {content.title}
-              </motion.h2>
-
-              <motion.p 
-                className="text-[#94A3B8] text-[15px] leading-relaxed mb-6 px-2"
-                initial={{ y: 5, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                {bodyText}
-              </motion.p>
-
-
-            </div>
+          <motion.div
+            animate={{ y: [0, -8, 0], rotate: [-2, 2, -2] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            className="text-6xl mb-2 relative z-10 drop-shadow-xl mt-3"
+          >
+            {content.emoji}
           </motion.div>
         </div>
-      )}
+
+        {/* Content Body */}
+        <div className="px-7 py-8 flex flex-col items-center text-center">
+          <motion.h2
+            className="text-xl font-bold mb-4 tracking-tight"
+            style={{ color: '#F8FAFC' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {content.title}
+          </motion.h2>
+
+          <motion.p
+            className="text-[#94A3B8] text-[15px] leading-relaxed mb-6 px-2"
+            initial={{ y: 5, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            {bodyText}
+          </motion.p>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export const UserDelightPopup = ({ isOpen, onClose, userName }: UserDelightPopupProps) => {
+  return (
+    <AnimatePresence>
+      {isOpen && <UserDelightDialogContent onClose={onClose} userName={userName} />}
     </AnimatePresence>
   );
 };
