@@ -1,0 +1,29 @@
+{
+  "name": "DailyThings — Daily Habit & Task Flow",
+  "short_name": "DailyThings",
+  "description": "A psychology-driven, gamified daily task planner designed for momentum, focus, and positive reinforcement.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#080C15",
+  "theme_color": "#080C15",
+  "categories": ["productivity", "utilities", "lifestyle"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Task",
+      "short_name": "New Task",
+      "description": "Create a new daily task",
+      "url": "/?action=new",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ]
+}

@@ -22,12 +22,16 @@ import {
   CheckCircle,
   Dumbbell,
   BookOpen,
+  WifiOff,
+  Download,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { playModalOpenSound, playButtonTapSound } from "./utils/sound";
+import { usePWA } from "./hooks/usePWA";
 
 function App() {
   useDailyReset();
+  const { isOnline, isInstallable, promptInstall } = usePWA();
   const tasks = useTaskStore((state) => state.tasks);
   const addTask = useTaskStore((state) => state.addTask);
   const settings = useTaskStore((state) => state.settings);
@@ -210,10 +214,36 @@ function App() {
               <Coffee size={13} />
               <span>Rest & Reset</span>
             </button>
+
+            {!isOnline && (
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-semibold"
+                style={{
+                  background: "rgba(245, 158, 11, 0.12)",
+                  color: "#FBBF24",
+                  border: "1px solid rgba(245, 158, 11, 0.25)",
+                }}
+                title="Running in 100% offline mode from local disk"
+              >
+                <WifiOff size={11} /> Offline
+              </span>
+            )}
           </div>
 
           {/* Right action buttons */}
           <div className="flex items-center gap-2 ml-auto">
+            {isInstallable && (
+              <button
+                onClick={promptInstall}
+                title="Install DailyThings app to your device"
+                aria-label="Install app"
+                className="btn-secondary flex items-center gap-1.5 text-xs px-2.5 py-1.5 cursor-pointer"
+              >
+                <Download size={13} />
+                <span className="hidden sm:inline">Install App</span>
+              </button>
+            )}
+
             <button
               onClick={() => setIsSettingsOpen(true)}
               title="Settings & Preferences"
