@@ -10,6 +10,7 @@ import { MessageModal } from "./components/MessageModal";
 import { RewardPopup } from "./components/RewardPopup";
 import { UserDelightPopup } from "./components/UserDelightPopup";
 import { useDailyReset } from "./hooks/useDailyReset";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useTaskStore } from "./store/useTaskStore";
 import { getGreeting } from "./data/greetings";
 import { STORIES, TIRED_MESSAGES, type StoryItem } from "./data/motivation";
@@ -27,6 +28,21 @@ function App() {
   const [motivateModal, setMotivateModal] = useState<StoryItem | null>(null);
   const [tiredModal, setTiredModal] = useState<string | null>(null);
   const [isUserDelightOpen, setIsUserDelightOpen] = useState(false);
+
+  // Keyboard navigation shortcuts
+  useKeyboardShortcuts({
+    onNewTask: () => {
+      setEditTaskId(null);
+      setIsTaskFormOpen(true);
+    },
+    onEscape: () => {
+      setIsTaskFormOpen(false);
+      setIsSettingsOpen(false);
+      setMotivateModal(null);
+      setTiredModal(null);
+      setIsUserDelightOpen(false);
+    },
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -169,12 +185,15 @@ function App() {
 
             <button
               onClick={handleOpenNewTask}
-              title="Add New Task"
+              title="Add New Task (Hotkey: N)"
               aria-label="Add a new task"
               className="btn-primary flex items-center gap-1.5 text-xs px-3 py-2 cursor-pointer"
             >
               <Plus size={14} />
               <span>New Task</span>
+              <kbd className="hidden sm:inline-block ml-1 px-1.5 py-0.2 text-[9px] font-mono bg-white/20 rounded">
+                N
+              </kbd>
             </button>
           </div>
         </div>
@@ -211,7 +230,7 @@ function App() {
                 No tasks yet
               </h3>
               <p className="text-sm mb-5" style={{ color: "var(--text-muted)" }}>
-                Start building your day — add your first task.
+                Start building your day — press <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-xs border border-slate-700">N</kbd> or click below to add your first task.
               </p>
               <button onClick={handleOpenNewTask} className="btn-primary cursor-pointer">
                 + Add First Task

@@ -1,10 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTaskStore } from '../store/useTaskStore';
-import { X, Trash2, Settings as SettingsIcon } from 'lucide-react';
+import { X, Trash2, Settings as SettingsIcon, Volume2, ArrowRightLeft } from 'lucide-react';
 
 export const Settings = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const settings       = useTaskStore(state => state.settings);
-  const updateSettings = useTaskStore(state => state.updateSettings);
+  const settings = useTaskStore((state) => state.settings);
+  const updateSettings = useTaskStore((state) => state.updateSettings);
 
   const handleWipeData = () => {
     if (confirm('This will erase ALL tasks and settings. Cannot be undone.')) {
@@ -52,7 +52,7 @@ export const Settings = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <X size={18} color="rgba(255,255,255,0.8)" />
               </button>
@@ -74,7 +74,7 @@ export const Settings = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                   type="text"
                   title="Name"
                   value={settings.name}
-                  onChange={e => updateSettings({ name: e.target.value })}
+                  onChange={(e) => updateSettings({ name: e.target.value })}
                   className="input-premium w-full"
                   style={{ color: 'var(--text-primary)' }}
                 />
@@ -93,14 +93,86 @@ export const Settings = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                   id="settings-theme"
                   title="Theme"
                   value={settings.theme}
-                  onChange={e => updateSettings({ theme: e.target.value as 'dark' | 'light' | 'system' })}
-                  className="input-premium w-full appearance-none"
-                  style={{ color: 'var(--text-primary)' }}
+                  onChange={(e) =>
+                    updateSettings({ theme: e.target.value as 'dark' | 'light' | 'system' })
+                  }
+                  className="input-premium w-full appearance-none cursor-pointer"
+                  style={{ color: 'var(--text-primary)', background: 'var(--bg-surface)' }}
                 >
                   <option value="system">System Default</option>
-                  <option value="dark">Dark</option>
-                  <option value="light">Light</option>
+                  <option value="dark">Dark Mode (Default)</option>
+                  <option value="light">Light Mode</option>
                 </select>
+              </div>
+
+              {/* Carry Forward Unfinished */}
+              <div
+                className="flex items-center justify-between py-2 border-t"
+                style={{ borderColor: 'var(--border-default)' }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <ArrowRightLeft size={16} style={{ color: 'var(--brand)' }} />
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Carry Forward Unfinished Tasks
+                    </p>
+                    <p className="text-[10px]" style={{ color: 'var(--text-disabled)' }}>
+                      Move pending tasks to the new day automatically
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateSettings({
+                      carryForwardUnfinished: !settings.carryForwardUnfinished,
+                    })
+                  }
+                  className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                    settings.carryForwardUnfinished ? 'bg-indigo-600' : 'bg-slate-700'
+                  }`}
+                >
+                  <span
+                    className={`block w-4 h-4 rounded-full bg-white transition-transform ${
+                      settings.carryForwardUnfinished ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Sound Effects */}
+              <div
+                className="flex items-center justify-between py-2 border-t"
+                style={{ borderColor: 'var(--border-default)' }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Volume2 size={16} style={{ color: 'var(--brand)' }} />
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Sound Effects
+                    </p>
+                    <p className="text-[10px]" style={{ color: 'var(--text-disabled)' }}>
+                      Celebratory chimes and step completion ticks
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateSettings({
+                      soundEnabled: settings.soundEnabled === false ? true : false,
+                    })
+                  }
+                  className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                    settings.soundEnabled !== false ? 'bg-indigo-600' : 'bg-slate-700'
+                  }`}
+                >
+                  <span
+                    className={`block w-4 h-4 rounded-full bg-white transition-transform ${
+                      settings.soundEnabled !== false ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
               </div>
 
               {/* Danger zone */}
@@ -108,19 +180,22 @@ export const Settings = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
                 className="pt-4 border-t space-y-2"
                 style={{ borderColor: 'var(--border-default)' }}
               >
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-disabled)' }}>
+                <p
+                  className="text-[10px] font-bold uppercase tracking-widest"
+                  style={{ color: 'var(--text-disabled)' }}
+                >
                   Danger Zone
                 </p>
                 <button
                   onClick={handleWipeData}
-                  className="w-full py-3 rounded-xl text-sm font-semibold flex justify-center items-center gap-2 transition-all"
+                  className="w-full py-3 rounded-xl text-sm font-semibold flex justify-center items-center gap-2 transition-all cursor-pointer"
                   style={{
                     background: 'rgba(239,68,68,0.08)',
                     color: 'var(--danger)',
                     border: '1px solid rgba(239,68,68,0.2)',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.08)')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.08)')}
                 >
                   <Trash2 size={15} /> Erase All Data
                 </button>
