@@ -1,5 +1,16 @@
 # DailyThings ✨
 
+> **A psychology-driven, local-first daily task planner built for momentum, focus, and cognitive flow.**
+
+[![React 19](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
+[![Zustand](https://img.shields.io/badge/State-Zustand-443e38?style=flat-square)](https://github.com/pmndrs/zustand)
+[![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?style=flat-square)](https://web.dev/progressive-web-apps/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+DailyThings replaces overwhelming endless backlogs with a focused, 24-hour execution cycle. Built with a local-first philosophy, zero trackers, and micro-delight mechanics that reward daily consistency.
+
 > **A psychology-driven, gamified daily task planner built for momentum, focus, and positive reinforcement.**
 
 DailyThings is designed to help you conquer each day with clarity and confidence. Rather than acting as a static checklist, it provides a supportive environment with daily resets, celebration animations, drag-and-drop prioritization, and motivational wisdom to keep you consistent.
